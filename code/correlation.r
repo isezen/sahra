@@ -27,6 +27,7 @@ cor_anal <- function(x) {
 
 cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   # pm <- as.vector(pm)
+  source("code/base.r", local = T)
   source("code/windhelper.r", local = T)
   calc <- function(uv) {
     rot <- function(a) rotax(uv, alfa = a)
