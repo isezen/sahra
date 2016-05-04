@@ -3,6 +3,13 @@
 This folder contains _NCEP-DOE AMIP-II Reanalysis (AKA Reanalysis 2)_ files to
 research. Files are downloaded from [NCEP Reanalysis 2](http://www.esrl.noaa.gov/psd/data/gridded/data.ncep.reanalysis2.html).
 
+To download files below:
+run sahra.Rproj in rstudio, source filehelper.r and issue the command
+
+```R
+download_ncep_R2()
+```
+
 ###### Common Properties:
 * **Latitude :** 0 - 60N
 * **Longitude :** 10E - 55E
