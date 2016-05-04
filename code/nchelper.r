@@ -5,8 +5,6 @@
 library(ncdf4)
 library(ncdf4.helpers)
 
-source("code/filehelper.r")
-
 nc_get_data <- function(nc, lats=NULL, lons=NULL, levels=NULL, times=NULL) {
   c_to_i <- function(dim.name, vals) {
     return(match(vals, ncvar_get(nc, dim.name)))
@@ -44,17 +42,54 @@ nc_get_data <- function(nc, lats=NULL, lons=NULL, levels=NULL, times=NULL) {
 
 nc2rdata <- function(file_prefix = "r2-pres-4-", suffix = c("u", "v")) {
   l <- list()
-  for (c in suffix) {
-    f <- paste0(file_prefix, c, ".nc")
-    nc <- nc_open(file.path("data", "nc", f))
-    l[[c]]  <- nc_get_data(nc)
-    nc_close(nc)
-  }
-  if (length(l) > 1) {
-    data <- array(unlist(l), dim = c(dim(l[[1]]), component = length(l)))
-    dimnames(data) <- append(dimnames(l[[1]]), list(component = suffix))
+  dir_out <- "data/rdata"
+  dir.create(dir_out, showWarnings = F)
+  save_to <- file.path(dir_out, paste0(file_prefix, paste0(suffix, collapse = ""), ".rdata"))
+  if (!file.exists(save_to)) {
+    for (c in suffix) {
+      f <- paste0(file_prefix, c, ".nc")
+      nc <- nc_open(file.path("data", "nc", f))
+      l[[c]]  <- nc_get_data(nc)
+      nc_close(nc)
+    }
+    if (length(l) > 1) {
+      data <- array(unlist(l), dim = c(dim(l[[1]]), component = length(l)))
+      dimnames(data) <- append(dimnames(l[[1]]), list(component = suffix))
+    } else {
+      data <- l[[1]]
+    }
+    save_to <- file.path(dir_out, paste0(file_prefix, paste0(suffix, collapse = ""), ".rdata"))
+    save(data, file = save_to, envir = environment())
   } else {
-    data <- l[[1]]
+    cat(save_to, "is exist.\n")
   }
-  save_rdata(data, file = paste0("rdata/", file_prefix, paste0(suffix, collapse = "")))
+}
+
+extract_time <- function(x, from = 1, by = 4) {
+  source("code/base.r", local = T)
+  dim_time <- which(names(dim(x)) == "time")
+  time_length <- dim(x)[dim_time]
+  e <- index_array(x, dim_time, seq(from, time_length, by))
+  dn <- dimnames(e)
+  names(dim(e)) <- names(dn)
+  dimnames(e) <- dn
+  return(e)
+}
+
+nc2rdata_all <- function() {
+  dir_out <- "data/rdata"
+  for (f in c("r2-10m-4-", "r2-10m-daily-",
+              "r2-pres-4-", "r2-pres-daily-"))
+    nc2rdata(f)
+  for (f in c("r2-pres-4-", "r2-pres-daily-")) nc2rdata(f, "hgt")
+  for (f in list.files(dir_out, "*-4-*")) {
+    load(file.path(dir_out, f))
+    x <- data
+    tm <- c("00", "06", "12", "18")
+    for (i in 1:4) {
+      data <- extract_time(x, from = i)
+      save_to <- file.path(dir_out, gsub("-4-", paste0("-", tm[i], "-"), f))
+      save(data, file = save_to, envir = environment())
+    }
+  }
 }

@@ -41,16 +41,6 @@ normalize <- function(x, perct=1, in_range=c(0, 1), remove_mean=F) {
   return(Xs)
 }
 
-extract_time <- function(x, from = 1, by = 4) {
-  dim_time <- which(names(dim(x)) == "time")
-  time_length <- dim(x)[dim_time]
-  e <- index_array(x, dim_time, seq(from, time_length, by))
-  dn <- dimnames(e)
-  names(dim(e)) <- names(dn)
-  dimnames(e) <- dn
-  return(e)
-}
-
 create_grids <- function(x, y, dx=NULL, dy = dx) {
   if (is.null(dx)) dx <- x[2] - x[1]
   if (is.null(dy)) dy <- y[2] - y[1]
