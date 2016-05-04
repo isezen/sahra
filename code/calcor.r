@@ -21,7 +21,6 @@ calcor <- function(files = stop("'file' must be specified")) {
         cat(basename(save_to), "\n")
         print(system.time(data <- cor2(w, p, alfa = seq(0, 360, 1))))
         save(data, file = save_to, envir = parent.frame())
-        stop()
       } else {
         cat(save_to, " is exist.\n")
       }
