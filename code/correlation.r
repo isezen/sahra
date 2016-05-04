@@ -45,7 +45,7 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
     stop("x does not have a dim suitable with pm")
   if (par) {
     library(parallel)
-    cl <- makeCluster(detectCores() - 1, outfile = "")
+    cl <- makeCluster(detectCores() - 1)
     clusterExport(cl, c("pm", "index_array", "rotax", "alfa"), envir = environment())
     r <- parApply(cl, x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
     stopCluster(cl)
