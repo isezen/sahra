@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 R --slave<<EOF
  source("code/calcor.r")
