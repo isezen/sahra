@@ -46,7 +46,7 @@ nc2rdata <- function(file_prefix = "r2-pres-4-", suffix = c("u", "v")) {
   l <- list()
   for (c in suffix) {
     f <- paste0(file_prefix, c, ".nc")
-    nc <- nc_open(file.path(dir_data, "nc", f))
+    nc <- nc_open(file.path("data", "nc", f))
     l[[c]]  <- nc_get_data(nc)
     nc_close(nc)
   }
