@@ -20,7 +20,7 @@ calcor <- function(files = stop("'file' must be specified")) {
         cat("Calculation started at ", as.character(now()), "\n")
         cat(basename(save_to), "\n")
         print(system.time(data <- cor2(w, p, alfa = seq(0, 360, 1))))
-        save(data, file = save_to, envir = parent.frame())
+        save(data, file = save_to, envir = environment())
       } else {
         cat(save_to, " is exist.\n")
       }
