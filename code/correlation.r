@@ -45,13 +45,14 @@ cor_anal_from_files <- function() {
 }
 
 cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
-  source("code/base.r", local = T)
-  source("code/windhelper.r", local = T)
   calc <- function(uv) {
     rot <- function(a) rotax(uv, alfa = a)
-    cor2 <- function(x, y) cor(y, x, use = "pairwise.complete.obs")
+    cor2 <- function(x1) {
+      ret2 <- apply(pm, 2, cor, y = x1, use = "pairwise.complete.obs")
+    }
     r <- vapply(alfa, rot, outer(1:dim(uv)[1], 1:dim(uv)[2]))
-    ret <- t(apply(r, c(2, 3), cor, y = pm, use = "pairwise.complete.obs"))
+    ret <- apply(r, c(2, 3), cor2)
+    dimnames(ret)[[3]] <- alfa
     return(ret)
   }
   comp_loc <- which(dim(x) == 2) # find uv dim order
@@ -61,17 +62,19 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   if (length(time_loc) == 0)
     stop("x does not have a dim suitable with pm")
   if (require(parallel) && par) {
-    cl <- makeCluster(getOption("cl.cores", detectCores()/2))
-    clusterExport(cl, c("pm"), envir = environment())
-    clusterEvalQ(cl, library(rwind))
-    r <- parApply(cl, x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
-    stopCluster(cl)
+    cl <- parallel::makeCluster(getOption("cl.cores", detectCores()/2))
+    parallel::clusterExport(cl, c("pm", "alfa"), envir = environment())
+    parallel::clusterEvalQ(cl, library(rwind))
+    r <- parallel::parApply(cl, x,
+                            (1:length(dim(x)))[-c(comp_loc, time_loc)],
+                            calc)
+    parallel::stopCluster(cl)
   } else {
     r <- apply(x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
   }
-  r <- array(r, dim = c(length(alfa), 2, dim(x)[-c(comp_loc, time_loc)]))
-  names(dim(r)) <- c("alfa", "component", names(dim(x)[-c(comp_loc, time_loc)]))
-  dimnames(r) <- append(list(alfa = alfa, component = c("u", "v")), dimnames(x)[-c(comp_loc, time_loc)])
+  r <- array(r, dim = c(ncol(pm), length(alfa), 2, dim(x)[-c(comp_loc, time_loc)]))
+  names(dim(r)) <- c("pm", "alfa", "component", names(dim(x)[-c(comp_loc, time_loc)]))
+  dimnames(r) <- append(list(pm = colnames(pm), alfa = alfa, component = c("u", "v")), dimnames(x)[-c(comp_loc, time_loc)])
   dim_order <- 1:length(dim(r))
   comp_loc <- which(dim(r) == 2)
   alfa_loc <- which(dim(r) == length(alfa))
@@ -80,4 +83,18 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   dim_remain <- dim_order[-c(comp_loc, alfa_loc)]
   r <- aperm(r, c(dim_remain, dim_comp, dim_alfa))
   return(r)
+}
+
+test_cor2 <- function() {
+  nc <- 5
+  pm <- matrix(runif(1827 * nc, 0, 150), ncol = nc)
+  times <- as.character(seq(from = as.Date("2008-01-01"), length.out = 1827, by = "1 day"))
+  rownames(pm) <- times
+  colnames(pm) <- paste0("pm", 1:ncol(pm))
+  #
+  wdim <- c(23, 21, 17, 1827, 2)
+  x <- array(runif(prod(wdim), -5, 5), dim = wdim)
+  dimnames(x) <- list(lat = 1:wdim[1], lon = 1:wdim[2],
+                      level = 1:wdim[3], time = times, comp = c("u", "v"))
+  cc <- cor2(x, pm)
 }
