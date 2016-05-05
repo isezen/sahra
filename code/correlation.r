@@ -45,7 +45,6 @@ cor_anal_from_files <- function() {
 }
 
 cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
-  # pm <- as.vector(pm)
   source("code/base.r", local = T)
   source("code/windhelper.r", local = T)
   calc <- function(uv) {
@@ -53,7 +52,6 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
     cor2 <- function(x, y) cor(y, x, use = "pairwise.complete.obs")
     r <- vapply(alfa, rot, outer(1:dim(uv)[1], 1:dim(uv)[2]))
     ret <- t(apply(r, c(2, 3), cor, y = pm, use = "pairwise.complete.obs"))
-    # print(max(ret))
     return(ret)
   }
   comp_loc <- which(dim(x) == 2) # find uv dim order
@@ -62,10 +60,10 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   time_loc <- which(dim(x) == nrow(pm)) # find time dim order
   if (length(time_loc) == 0)
     stop("x does not have a dim suitable with pm")
-  if (par) {
-    library(parallel)
+  if (require(parallel) && par) {
     cl <- makeCluster(getOption("cl.cores", detectCores()/2))
-    clusterExport(cl, c("pm", "index_array", "rotax", "alfa"), envir = environment())
+    clusterExport(cl, c("pm"), envir = environment())
+    clusterEvalQ(cl, library(rwind))
     r <- parApply(cl, x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
     stopCluster(cl)
   } else {
