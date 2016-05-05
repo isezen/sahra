@@ -15,14 +15,26 @@ windhelper_get_args <- function(...) {
 }
 
 
-deg_to_comp <- function(x, bin_names=c("N", "NNE", "NE", "ENE",
-                                       "E", "ESE", "SE", "SSE",
-                                       "S", "SSW", "SW", "WSW",
-                                       "W", "WNW", "NW", "NNW")) {
+deg_to_comp <- function(x, bins = c("N", "NNE", "NE", "ENE",
+                                    "E", "ESE", "SE", "SSE",
+                                    "S", "SSW", "SW", "WSW",
+                                    "W", "WNW", "NW", "NNW")) {
   x[x == 0] <- 360
-  i <- 360 / length(bin_names)
+  i <- 360 / length(bins)
   val <- round( (x / i) + .5)
+  val[1:length(val)] <- bins[val]
+  replace(val, 1:length(val), bins[val])
   return(matrix(bin_names[val], nrow(x), ncol(x), dimnames = dimnames(x)))
+}
+
+deg2comp <- function(x, bins = c("N", "NNE", "NE", "ENE",
+                                 "E", "ESE", "SE", "SSE",
+                                 "S", "SSW", "SW", "WSW",
+                                 "W", "WNW", "NW", "NNW")) {
+  x[x == 0] <- 360
+  val <- round( (x * length(bins) / 360) + .5)
+  val[1:length(val)] <- bins[val]
+  return(val)
 }
 
 # Convert u,v wind components to horizontal speed and direction

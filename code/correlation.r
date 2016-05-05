@@ -18,11 +18,30 @@ corstat <- function(x) {
   return(list(max = max_cor, min = min_cor, df = df))
 }
 
+#' Shows a summary of correlation data.
+#'
+#' @param x correlation array
+#' @return Nothing
+#' @examples
+#' x <- array(rnorm(1000), dim = c(10, 10, 10))
+#' cor_anal(x)
 cor_anal <- function(x) {
   st <- corstat(x)
   cat("Max Correlation = ", st$max, "\n")
   cat("Min Correlation = ", st$min, "\n")
   print(st$df)
+}
+
+cor_anal_from_files <- function() {
+  dir_data_cor <- "data/cor"
+  files <- list.files(dir_data_cor, full.names = T)
+  for (f in files) {
+    bf <- basename(f)
+    load(f, environment())
+    cat(bf, "\n")
+    cor_anal(data)
+    cat("\n")
+  }
 }
 
 cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
@@ -45,7 +64,7 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
     stop("x does not have a dim suitable with pm")
   if (par) {
     library(parallel)
-    cl <- makeCluster(detectCores() - 1)
+    cl <- makeCluster(getOption("cl.cores", detectCores()/2))
     clusterExport(cl, c("pm", "index_array", "rotax", "alfa"), envir = environment())
     r <- parApply(cl, x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
     stopCluster(cl)
