@@ -2,6 +2,8 @@
 # 2016-05-04 Ismail SEZEN
 # sezenismail@gmail.com
 
+source("code/base.r")
+
 corstat <- function(x) {
   get_names <- function(dn, i) {
     m <- vector()
@@ -16,6 +18,17 @@ corstat <- function(x) {
   min <- get_names(dn, imin)
   df <- data.frame(imax, imin, max, min)
   return(list(max = max_cor, min = min_cor, df = df))
+}
+
+corstat2 <- function(x, dim = 1) {
+  dim_comp <- if (is.character(dim))
+                which(names(dimnames(x)) == dim)
+              else
+                which(dim(x) == dim)
+  l <- list()
+  for (i in dimnames(x)[[dim_comp]])
+    l[[i]] <- corstat(index_array(x, dim_comp, i))
+  return(l)
 }
 
 #' Shows a summary of correlation data.
@@ -48,7 +61,7 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   calc <- function(uv) {
     rot <- function(a) rotax(uv, alfa = a)
     cor2 <- function(x1) {
-      ret2 <- apply(pm, 2, cor, y = x1, use = "pairwise.complete.obs")
+      apply(pm, 2, cor, y = x1, use = "pairwise.complete.obs")
     }
     r <- vapply(alfa, rot, outer(1:dim(uv)[1], 1:dim(uv)[2]))
     ret <- apply(r, c(2, 3), cor2)
@@ -63,7 +76,7 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
     stop("x does not have a dim suitable with pm")
   if (require(rwind)) {
     if (require(parallel) && par) {
-      cl <- parallel::makeCluster(getOption("cl.cores", detectCores()/2))
+      cl <- parallel::makeCluster(getOption("cl.cores", detectCores() / 2))
       parallel::clusterExport(cl, c("pm", "alfa"), envir = environment())
       parallel::clusterEvalQ(cl, library(rwind))
       r <- parallel::parApply(cl, x,
@@ -76,8 +89,13 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   } else {
     stop("Install rwind package")
   }
-  r <- array(r, dim = c(ncol(pm), 2, length(alfa), dim(x)[-c(comp_loc, time_loc)]))
-  names(dim(r)) <- c("pm", "component", "alfa", names(dim(x)[-c(comp_loc, time_loc)]))
+  r <- array(r, dim = c(ncol(pm), 2,
+                        length(alfa),
+                        dim(x)[-c(comp_loc, time_loc)]))
+  names(dim(r)) <- c("pm",
+                     "component",
+                     "alfa",
+                     names(dim(x)[-c(comp_loc, time_loc)]))
   dimnames(r) <- append(list(pm = colnames(pm),
                              component = c("u", "v"),
                              alfa = alfa), dimnames(x)[-c(comp_loc, time_loc)])
@@ -96,7 +114,8 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
 test_cor2 <- function() {
   nc <- 5
   pm <- matrix(runif(1827 * nc, 0, 150), ncol = nc)
-  times <- as.character(seq(from = as.Date("2008-01-01"), length.out = 1827, by = "1 day"))
+  times <- as.character(seq(from = as.Date("2008-01-01"),
+    length.out = 1827, by = "1 day"))
   rownames(pm) <- times
   colnames(pm) <- paste0("pm", 1:ncol(pm))
   #
