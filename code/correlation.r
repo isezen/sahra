@@ -4,55 +4,51 @@
 
 source("code/base.r")
 
-corstat <- function(x) {
-  get_names <- function(dn, i) {
-    m <- vector()
-    for (j in 1:length(i)) m <- c(m, dn[[names(i[j])]][i[j]])
-    return(m)
+corstat <- function(x, dim = NULL) {
+  csb <- function(x, func = max) {
+    dn <- dimnames(x)
+    as_char <- function(i) {
+      if (is.vector(i)) i <- matrix(i, ncol = 1)
+      ret <- sapply(1:ncol(i), function(j) dn[[j]][i[,j]])
+      if (is.vector(ret)) ret <- matrix(ret, ncol = length(ret), byrow = T)
+      return(ret)
+    }
+    fn <- as.character(substitute(func))
+    fres <- func(x)
+    i <-  which(x == fres, arr.ind = T); rownames(i) <- NULL
+    ichar <- as_char(i); colnames(ichar) <- paste0('v', colnames(i))
+    colnames(i) <- paste0('i', colnames(i))
+    df <- data.frame(fres, i, ichar, check.names = F)
+    colnames(df)[1] <- fn
+    return(df)
   }
-  dn <- dimnames(x)
-  max_cor <- max(x); min_cor <- min(x)
-  imax <-  which(x == max_cor, arr.ind = T)[1,]
-  max <- get_names(dn, imax)
-  imin <- which(x == min_cor, arr.ind = T)[1,]
-  min <- get_names(dn, imin)
-  df <- data.frame(imax, imin, max, min)
-  return(list(max = max_cor, min = min_cor, df = df))
+
+  cs <- function(x) {
+    mx <- csb(x, max)
+    mn <- csb(x, min)
+    colnames(mx)[1] <- colnames(mn)[1] <- "max_min"
+    df <- rbind(mx, mn)
+    return(df)
+  }
+
+  if (is.null(dim)) {
+    return(cs(x))
+  } else {
+    l <- list()
+    for (i in dimnames(x)[[dim]])
+      l[[i]] <- cs(index_array(x, dim, i))
+    return(l)
+  }
 }
 
-corstat2 <- function(x, dim = 1) {
-  dim_comp <- if (is.character(dim))
-                which(names(dimnames(x)) == dim)
-              else
-                which(dim(x) == dim)
-  l <- list()
-  for (i in dimnames(x)[[dim_comp]])
-    l[[i]] <- corstat(index_array(x, dim_comp, i))
-  return(l)
-}
-
-#' Shows a summary of correlation data.
-#'
-#' @param x correlation array
-#' @return Nothing
-#' @examples
-#' x <- array(rnorm(1000), dim = c(10, 10, 10))
-#' cor_anal(x)
-cor_anal <- function(x) {
-  st <- corstat(x)
-  cat("Max Correlation = ", st$max, "\n")
-  cat("Min Correlation = ", st$min, "\n")
-  print(st$df)
-}
-
-cor_anal_from_files <- function() {
+corstat_from_files <- function() {
   dir_data_cor <- "data/cor"
   files <- list.files(dir_data_cor, full.names = T)
   for (f in files) {
     bf <- basename(f)
     load(f, environment())
     cat(bf, "\n")
-    cor_anal(data)
+    print(corstat(data))
     cat("\n")
   }
 }
