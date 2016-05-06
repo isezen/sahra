@@ -55,33 +55,41 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
     dimnames(ret)[[3]] <- alfa
     return(ret)
   }
-  comp_loc <- which(dim(x) == 2) # find uv dim order
+  comp_loc <- which(dim(x) == 2) # find uv dim
   if (length(comp_loc) == 0)
     stop("x does not have a dim = 2 represents u and v")
-  time_loc <- which(dim(x) == nrow(pm)) # find time dim order
+  time_loc <- which(dim(x) == nrow(pm)) # find time dim
   if (length(time_loc) == 0)
     stop("x does not have a dim suitable with pm")
-  if (require(parallel) && par) {
-    cl <- parallel::makeCluster(getOption("cl.cores", detectCores()/2))
-    parallel::clusterExport(cl, c("pm", "alfa"), envir = environment())
-    parallel::clusterEvalQ(cl, library(rwind))
-    r <- parallel::parApply(cl, x,
-                            (1:length(dim(x)))[-c(comp_loc, time_loc)],
-                            calc)
-    parallel::stopCluster(cl)
+  if (require(rwind)) {
+    if (require(parallel) && par) {
+      cl <- parallel::makeCluster(getOption("cl.cores", detectCores()/2))
+      parallel::clusterExport(cl, c("pm", "alfa"), envir = environment())
+      parallel::clusterEvalQ(cl, library(rwind))
+      r <- parallel::parApply(cl, x,
+                              (1:length(dim(x)))[-c(comp_loc, time_loc)],
+                              calc)
+      parallel::stopCluster(cl)
+    } else {
+      r <- apply(x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
+    }
   } else {
-    r <- apply(x, (1:length(dim(x)))[-c(comp_loc, time_loc)], calc)
+    stop("Install rwind package")
   }
-  r <- array(r, dim = c(ncol(pm), length(alfa), 2, dim(x)[-c(comp_loc, time_loc)]))
-  names(dim(r)) <- c("pm", "alfa", "component", names(dim(x)[-c(comp_loc, time_loc)]))
-  dimnames(r) <- append(list(pm = colnames(pm), alfa = alfa, component = c("u", "v")), dimnames(x)[-c(comp_loc, time_loc)])
+  r <- array(r, dim = c(ncol(pm), 2, length(alfa), dim(x)[-c(comp_loc, time_loc)]))
+  names(dim(r)) <- c("pm", "component", "alfa", names(dim(x)[-c(comp_loc, time_loc)]))
+  dimnames(r) <- append(list(pm = colnames(pm),
+                             component = c("u", "v"),
+                             alfa = alfa), dimnames(x)[-c(comp_loc, time_loc)])
   dim_order <- 1:length(dim(r))
   comp_loc <- which(dim(r) == 2)
   alfa_loc <- which(dim(r) == length(alfa))
+  pm_loc <- which(dim(r) == ncol(pm))
   dim_comp <- dim_order[comp_loc]
   dim_alfa <- dim_order[alfa_loc]
-  dim_remain <- dim_order[-c(comp_loc, alfa_loc)]
-  r <- aperm(r, c(dim_remain, dim_comp, dim_alfa))
+  dim_pm <- dim_order[pm_loc]
+  dim_remain <- dim_order[-c(comp_loc, alfa_loc, pm_loc)]
+  r <- aperm(r, c(dim_remain, dim_pm, dim_comp, dim_alfa))
   return(r)
 }
 

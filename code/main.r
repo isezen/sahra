@@ -13,7 +13,7 @@ library(plyr)
 library(ggplot2)
 library(xts)
 # library(lubridate)
-library(PCICt)
+
 library(plotrix)
 library(ncdf4)
 library(ncdf4.helpers)

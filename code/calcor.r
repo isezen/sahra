@@ -12,18 +12,14 @@ calcor <- function(files = stop("'file' must be specified")) {
   dir.create(dir_out, showWarnings = F)
   for (f in files) {
     w <- load_rdata(f)
-    for (i in 1:ncol(pm)) {
-      p <- pm[,i]
-      pname <- colnames(p)
-      save_to <- file.path(dir_out, paste0("cor_", pname, "_", basename(f)))
-      if (!file.exists(save_to)) {
-        cat("Calculation started at ", as.character(now()), "\n")
-        cat(basename(save_to), "\n")
-        print(system.time(data <- cor2(w, p, alfa = seq(0, 360, 1))))
-        save(data, file = save_to, envir = environment())
-      } else {
-        cat(save_to, " is exist.\n")
-      }
+    save_to <- file.path(dir_out, paste0("cor_", basename(f)))
+    if (!file.exists(save_to)) {
+      cat("Calculation started at ", as.character(now()), "\n")
+      cat(basename(save_to), "\n")
+      print(system.time(data <- cor2(w, pm, alfa = seq(0, 360, 20))))
+      save(data, file = save_to, envir = environment())
+    } else {
+      cat(save_to, " is exist.\n")
     }
   }
 }

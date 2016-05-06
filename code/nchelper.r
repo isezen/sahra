@@ -4,6 +4,7 @@
 
 library(ncdf4)
 library(ncdf4.helpers)
+library(PCICt)
 
 nc_get_data <- function(nc, lats=NULL, lons=NULL, levels=NULL, times=NULL) {
   c_to_i <- function(dim.name, vals) {
