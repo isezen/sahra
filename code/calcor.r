@@ -10,17 +10,21 @@ calcor <- function(files = stop("'file' must be specified")) {
   pm <- read_pm10()
   dir_out <- "data/cor"
   dir.create(dir_out, showWarnings = F)
+  nof <- length(files)
+  i <- 1
   for (f in files) {
     w <- load_rdata(f)
     save_to <- file.path(dir_out, paste0("cor_", basename(f)))
     if (!file.exists(save_to)) {
-      cat("Calculation started at ", as.character(now()), "\n")
-      cat(basename(save_to), "\n")
-      print(system.time(data <- cor2(w, pm, alfa = seq(0, 360, 1))))
+      cat("Calculation started at", as.character(now()), "\n")
+      cat("(", i, "/", nof, ") ", basename(save_to), "\n", sep = "")
+      st <- system.time(data <- cor2(w, pm, alfa = seq(0, 360, 1)))[3]
+      cat("[Elapsed :", st, "sec]\n")
       save(data, file = save_to, envir = environment())
     } else {
-      cat(save_to, " is exist.\n")
+      cat("(", i, "/", nof, ") ", save_to, " is exist.\n", sep = "")
     }
+    i <- i + 1
   }
 }
 
