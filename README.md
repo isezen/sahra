@@ -24,3 +24,10 @@ Run `setup.sh` after you downloaded/cloned sahra to your computer. `setup.sh` do
 ```bash
 ./setup.sh
 ```
+
+##### calcor.sh
+`calcor.sh` is used to calculate correlations between PM columns in csv files and each grid point in netcdf files. Correlation results are saved to `data/cor` folder. To investigate results, source the `code/correlation.r` file and run the command below in R. Function gives you the maximum/minimum correlation location for each file.
+
+```R
+cor_anal_from_files()
+```
