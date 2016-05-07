@@ -17,7 +17,8 @@ save_rdata <- function(..., file = stop("'file' must be specified")) {
 }
 
 load_rdata <- function(file = stop("'file' must be specified")) {
-  load(file); return(data)
+  load(file)
+  get(ls()[ls() != file])
 }
 
 save_csv <- function(x, file = stop("'file' must be specified"),
