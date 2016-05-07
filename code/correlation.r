@@ -3,6 +3,7 @@
 # sezenismail@gmail.com
 
 source("code/base.r")
+source("code/filehelper.r")
 
 corstat <- function(x, dim = NULL) {
   csb <- function(x, func = max) {
@@ -109,7 +110,7 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
                              component = dim_comp_names,
                              alfa = alfa), dimnames(x)[dims])
   dim_order <- 1:length(dim(r))
-  first <- which(dim(r) == dim(x)[dims])
+  first <- match(dim(x)[dims], dim(r))
   remain <- dim_order[-first]
   r <- aperm(r, c(first, remain))
   return(drop(r))
