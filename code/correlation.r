@@ -42,12 +42,16 @@ corstat <- function(x, dim = NULL) {
   }
 }
 
-corstat_from_files <- function() {
+corstat_from_files <- function(pattern = NULL) {
   dir_data_cor <- "data/cor"
-  files <- list.files(dir_data_cor, full.names = T)
+  files <- list.files(dir_data_cor, full.names = T, pattern = pattern)
   for (f in files) {
     bf <- basename(f)
-    load(f, environment())
+    if (tools::file_ext(bf) == "rdata") {
+      load(f, environment())
+    }else if (tools::file_ext(bf) == "rds") {
+      data <- readRDS(f)
+    }
     cat(bf, "\n")
     print(corstat(data))
     cat("\n")
@@ -115,4 +119,3 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   r <- aperm(r, c(first, remain))
   return(drop(r))
 }
-
