@@ -11,12 +11,12 @@ calcor <- function(files = stop("'file' must be specified")) {
   nof <- length(files)
   i <- 1
   for (f in files) {
-    w <- load_rdata(f)
     fwe <- basename(tools::file_path_sans_ext(f))
     save_to <- file.path(dir_out, paste0("cor_", fwe, ".rds"))
     if (!file.exists(save_to)) {
       cat("Calculation started at", as.character(now()), "\n")
       cat("(", i, "/", nof, ") ", basename(save_to), "\n", sep = "")
+      w <- readRDS(f)
       st <- system.time(data <- cor2(w, pm, alfa = seq(0, 360, 1)))[3]
       cat("[Elapsed :", st, "sec]\n")
       saveRDS(data, file = save_to)
