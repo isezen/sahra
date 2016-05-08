@@ -23,4 +23,8 @@ countries_shp/
 
 # files
 *.nc
+*.rdata
+*.rds
+*.gs
+*.zip
 .Rproj.user
