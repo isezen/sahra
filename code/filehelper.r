@@ -2,6 +2,13 @@
 # 2016-05-04 Ismail SEZEN
 # sezenismail@gmail.com
 
+download_correlations <- function() {
+  dir_out <- "data/cor"
+  dir.create(dir_out, showWarnings = F)
+  system2('scp', paste0('mustang:/home/isezen/proj/sahra/data/cor/\\*.rds ',
+                        dir_out))
+}
+
 download_ncep_R2 <- function() {
   url <- "https://kovan.itu.edu.tr/index.php/s/qCe6lasJdaf3MxC/download"
   file <- "sahra-ncep-r2.zip"
