@@ -3,7 +3,6 @@
 # sezenismail@gmail.com
 
 source("code/correlation.r")
-source("code/filehelper.r")
 
 calcor <- function(files = stop("'file' must be specified")) {
   pm <- read_pm10()
@@ -28,14 +27,20 @@ calcor <- function(files = stop("'file' must be specified")) {
   }
 }
 
-files <- c("r2-pres-00-uv.rdata", "r2-pres-06-uv.rdata",
-           "r2-pres-12-uv.rdata", "r2-pres-18-uv.rdata",
-           "r2-pres-daily-uv.rdata",
-           "r2-10m-00-uv.rdata", "r2-10m-06-uv.rdata",
-           "r2-10m-12-uv.rdata", "r2-10m-18-uv.rdata",
-           "r2-10m-daily-uv.rdata",
-           "r2-pres-00-hgt.rdata", "r2-pres-06-hgt.rdata",
-           "r2-pres-12-hgt.rdata", "r2-pres-18-hgt.rdata",
-           "r2-pres-daily-hgt.rdata")
+files <- paste0(c("r2-pres-00-uv", "r2-pres-06-uv",
+                  "r2-pres-12-uv", "r2-pres-18-uv",
+                  "r2-pres-daily-uv",
+                  "r2-surf-00-uv", "r2-surf-06-uv",
+                  "r2-surf-12-uv", "r2-surf-18-uv",
+                  "r2-surf-daily-uv",
+                  "r2-pres-00-hgt", "r2-pres-06-hgt",
+                  "r2-pres-12-hgt", "r2-pres-18-hgt",
+                  "r2-pres-daily-hgt",
+                  "r2-surf-00-mslp", "r2-surf-06-mslp",
+                  "r2-surf-12-mslp", "r2-pres-18-mslp",
+                  "r2-surf-daily-mslp",
+                  "r2-pres-00-omega", "r2-pres-06-omega",
+                  "r2-pres-12-omega", "r2-pres-18-omega",
+                  "r2-pres-daily-omega"), ".rds")
 files <- file.path("data/rds", files)
 calcor(files)
