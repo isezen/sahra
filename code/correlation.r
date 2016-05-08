@@ -117,5 +117,11 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
   first <- match(dim(x)[dims], dim(r))
   remain <- dim_order[-first]
   r <- aperm(r, c(first, remain))
+
+  # copy attributes
+  attrs <- names(attributes(x))
+  attrs <- attrs[!(attrs %in% c("dim", "dimnames"))]
+  for (a in attrs) attr(r, a) <- attr(x, a)
+
   return(drop(r))
 }
