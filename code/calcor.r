@@ -37,5 +37,5 @@ files <- c("r2-pres-00-uv.rdata", "r2-pres-06-uv.rdata",
            "r2-pres-00-hgt.rdata", "r2-pres-06-hgt.rdata",
            "r2-pres-12-hgt.rdata", "r2-pres-18-hgt.rdata",
            "r2-pres-daily-hgt.rdata")
-files <- file.path("data/rdata", files)
+files <- file.path("data/rds", files)
 calcor(files)
