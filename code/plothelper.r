@@ -37,7 +37,7 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
   xn <- x
   dn  <- dimnames(xn)
   dnm <- names(dn)
-  l <- list(); i <- 3
+  l <- list(); i <- 4
   while (i <= length(dim(xn))) {
     if ( dim(xn)[i] == 1 ) {
       lv <- list(dn[[dnm[i]]][1])
@@ -57,7 +57,7 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
     xn <- index_array(xn, i, 1)
   }
   sub <- if (length(l) > 0) paste(names(l), "=", unlist(l), collapse = " | ") else ""
-  print(sub)
+  # print(sub)
   if (length(dim(xn)) == 2) xn <- array(xn, dim = c( dim(xn), 1))
   xn <- aperm(xn, c(2,1,3))
   if (!is.character(panel.title.format) || panel.title.format == "")
@@ -100,4 +100,24 @@ plot_vector_field <- function(u, v, ...) {
   vectorplot(w * 2, isField = "dXY", region = slope, margin = F, lwd = 1.2,
              par.settings = RdBuTheme(), narrows = 1000, at = 0:10, ...) +
     layer(sp.polygons(cntry, fill = 'transparent', col = "blue", alpha = 0.5))
+}
+
+plot_cor_for <- function(pattern = "hgt") {
+  dir_data_cor <- "data/cor"
+  files <- list.files(dir_data_cor, full.names = T, pattern = pattern)
+  for (f in files) {
+    bf <- basename(f)
+    if (tools::file_ext(bf) == "rds") {
+      data <- readRDS(f)
+      cap <- attr(data, "longname")
+      if (is.null(cap)) cap <- bf
+      if (grepl("pres", bf)) {
+        x <- aperm(data, c("lon", "lat", "level", "pm"))
+      }
+      if (grepl("hgt", bf)) {
+        x <- x[,,,6, drop = F]
+      }
+      print(plot_cor_map(x, main = cap, panel.title.format = "%s hPa"))
+    }
+  }
 }
