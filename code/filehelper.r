@@ -6,7 +6,7 @@ download_correlations <- function() {
   dir_out <- "data/cor"
   dir.create(dir_out, showWarnings = F)
   system2('scp', paste0('mustang:/home/isezen/proj/sahra/data/cor/\\*.rds ',
-                        dir_out))
+                        dir_out), wait = F)
 }
 
 download_ncep_R2 <- function() {
