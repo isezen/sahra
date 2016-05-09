@@ -3,7 +3,6 @@
 # sezenismail@gmail.com
 
 source("code/base.r")
-source("code/filehelper.r")
 
 corstat <- function(x, dim = NULL) {
   csb <- function(x, func = max) {
@@ -47,14 +46,22 @@ corstat_from_files <- function(pattern = NULL) {
   files <- list.files(dir_data_cor, full.names = T, pattern = pattern)
   for (f in files) {
     bf <- basename(f)
-    if (tools::file_ext(bf) == "rdata") {
-      load(f, environment())
-    }else if (tools::file_ext(bf) == "rds") {
-      data <- readRDS(f)
+    if (tools::file_ext(bf) == "rds") {
+      tryCatch({
+        data <- readRDS(f)
+        longname <- attr(data, "longname")
+        if (is.null(longname))
+          cat(bf, ":\n")
+        else
+          cat(longname, ":\n")
+        print(corstat(data))
+        cat("\n")
+      }, error = function(e) {
+        cat(bf, "cannot be read.\n")
+      }, finally = {
+        next
+      })
     }
-    cat(bf, "\n")
-    print(corstat(data))
-    cat("\n")
   }
 }
 
