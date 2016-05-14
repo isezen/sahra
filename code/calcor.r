@@ -3,6 +3,7 @@
 # sezenismail@gmail.com
 
 source("code/correlation.r")
+source("code/filehelper.r")
 
 calcor <- function(files = stop("'file' must be specified"), log = T) {
   pm <- read_pm10()
