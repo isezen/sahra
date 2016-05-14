@@ -24,7 +24,6 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
   library(raster)
   library(rasterVis)
   library(timeSeries)
-  source("code/base.r", local = T)
   get_pts <- function(s, FUN = colMaxs, ...) {
     pts <- rasterToPoints(s, spatial = T)
     nl <- length(names(s))
@@ -54,7 +53,7 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
     lv <- list(dn[[dnm[i]]][1])
     names(lv) <- dnm[i]
     l <- append(l, lv)
-    xn <- index_array(xn, i, 1)
+    xn <- rwind:::index_array(xn, i, 1)
   }
   sub <- if (length(l) > 0) paste(names(l), "=", unlist(l), collapse = " | ") else ""
   # print(sub)

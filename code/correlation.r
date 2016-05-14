@@ -2,8 +2,6 @@
 # 2016-05-04 Ismail SEZEN
 # sezenismail@gmail.com
 
-source("code/base.r")
-
 corstat <- function(x, dim = NULL) {
   csb <- function(x, func = max) {
     dn <- dimnames(x)
@@ -36,7 +34,7 @@ corstat <- function(x, dim = NULL) {
   } else {
     l <- list()
     for (i in dimnames(x)[[dim]])
-      l[[i]] <- cs(index_array(x, dim, i))
+      l[[i]] <- cs(rwind:::index_array(x, dim, i))
     return(l)
   }
 }
@@ -132,3 +130,22 @@ cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
 
   return(drop(r))
 }
+
+# x <- readRDS("data/rds/r2-pres-daily-omega.rds")
+# r <- cor2(x, pm)
+# corstat(r)
+# r <- aperm(r, c(1,2,4,3))
+# plot_cor_map(r[,,, 6, drop = F], main = "Omega" , "%s hPa")
+# ri <- rsezen::ibicubic(r[,, 1:2, 6, drop = F], dx = 0.1)
+# names(dimnames(ri)) <- names(dimnames(r))[1:3]
+# plot_cor_map(ri, "Omega", "%s hPa")
+# str(ri[,,1,drop = F])
+# plot_cor_map(ri[,,1,drop = F])
+
+# corstat_from_files("hgt")
+# x <- aperm(readRDS("data/cor/cor_r2-pres-daily-hgt.rds"), c(1,2,4,3))
+# plot_cor_map(x[,,,6, drop = F], main = "Geoptential Height" , "%s hPa")
+#
+# xi <- rsezen::ibicubic(x[,,1:6,6, drop = F], dx = 0.1)
+# names(dimnames(xi)) <- names(dimnames(x))[1:3]
+# plot_cor_map(xi, main = "Geoptential Height", "%s hPa")

@@ -70,10 +70,9 @@ nc2rds <- function(file_prefix = "r2-pres-4-", suffix = c("u", "v")) {
 }
 
 extract_time <- function(x, from = 1, by = 4) {
-  source("code/base.r", local = T)
   dim_time <- which(names(dim(x)) == "time")
   time_length <- dim(x)[dim_time]
-  e <- index_array(x, dim_time, seq(from, time_length, by))
+  e <- rwind:::index_array(x, dim_time, seq(from, time_length, by))
   dn <- dimnames(e)
   names(dim(e)) <- names(dn)
   dimnames(e) <- dn
