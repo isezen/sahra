@@ -58,7 +58,11 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
   }
   sub <- if (length(l) > 0) paste(names(l), "=", unlist(l), collapse = " | ") else ""
   # print(sub)
-  if (length(dim(xn)) == 2) xn <- array(xn, dim = c( dim(xn), 1))
+  if (length(dim(xn)) == 2) {
+    xn <- array(xn, dim = c( dim(xn), 1))
+    names(dim(xn)) <- dnm
+    dimnames(xn) <- dn
+  }
   xn <- aperm(xn, c(2,1,3))
   if (!is.character(panel.title.format) || panel.title.format == "")
     panel.title.format = paste(names(dimnames(xn))[3], "= %s")
@@ -66,13 +70,14 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
 
   lon <- as.numeric(colnames(xn))
   lat <- as.numeric(rownames(xn))
+  # print(lon); print(lat)
   stck <- stack(apply(xn, 3, raster,
                       xmn = min(lon), xmx = max(lon),
                       ymn = min(lat), ymx =  max(lat)))
   pts_mx <- get_pts(stck, colMaxs)
   pts_mn <- get_pts(stck, colMins)
   levelplot(stck, par.settings = BuRdTheme, names.attr = panel.title, margin = list(NULL),
-            xlab = 'Longitude', ylab = 'Latitude', main = main, sub = sub) +
+            xlab = 'Longitude', ylab = 'Latitude', main = main, sub = sub, interpolate = T) +
     latticeExtra::layer(sp.polygons(cntry, fill = 'transparent', col = "gray50", alpha = 0.9), under = F) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 3, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 1, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
@@ -108,16 +113,32 @@ plot_cor_for <- function(pattern = "hgt") {
   for (f in files) {
     bf <- basename(f)
     if (tools::file_ext(bf) == "rds") {
-      data <- readRDS(f)
-      cap <- attr(data, "longname")
+      x <- readRDS(f)
+      df <- corstat(x)
+      cap <- attr(x, "longname")
       if (is.null(cap)) cap <- bf
-      if (grepl("pres", bf)) {
-        x <- aperm(data, c("lon", "lat", "level", "pm"))
+      panel.title.format <- ""
+      imx <- which(df[,1] == max(df[,1]), arr.ind = T)[1]
+      df <- df[imx,]
+      if (grepl("uv", bf)) {
+        if (grepl("pres", bf)) {
+          x <- x[,, df[1, "ipm"],, df[1, "ialfa"], df[1, "ilevel"], drop = F]
+        } else if (grepl("surf", bf)) {
+          x <- x[,, df[1, "ipm"],, df[1, "ialfa"], drop = F]
+        }
+        panel.title.format <- "%s Wind"
+      } else if (grepl("hgt", bf)) {
+        x <- x[,,,  df[1, "ilevel"], drop = T]
+        x <- x[,,df[1, "ipm"], drop = F]
+      } else if (grepl("mslp", bf)) {
+        x <- x[,, df[1, "ipm"], drop = F]
+      } else if (grepl("omega", bf)) {
+        x <- x[,,,  df[1, "ilevel"], drop = T]
+        x <- x[,,df[1, "ipm"], drop = F]
       }
-      if (grepl("hgt", bf)) {
-        x <- x[,,,6, drop = F]
-      }
-      print(plot_cor_map(x, main = cap, panel.title.format = "%s hPa"))
+      pdf(paste0(bf, ".pdf"), width = 16, height = 8)
+      print(plot_cor_map(x, main = cap, panel.title.format = panel.title.format))
+      dev.off()
     }
   }
 }
