@@ -4,15 +4,20 @@
 
 source("code/correlation.r")
 
-calcor <- function(files = stop("'file' must be specified")) {
+calcor <- function(files = stop("'file' must be specified"), log = T) {
   pm <- read_pm10()
+  file_prefix <- "pm_"
+  if (log) {
+    pm <- log(pm)
+    file_prefix <- paste0("log_", file_prefix)
+  }
   dir_out <- "data/cor"
   dir.create(dir_out, showWarnings = F)
   nof <- length(files)
   i <- 1
   for (f in files) {
     fwe <- basename(tools::file_path_sans_ext(f))
-    save_to <- file.path(dir_out, paste0("cor_", fwe, ".rds"))
+    save_to <- file.path(dir_out, paste0("cor_", file_prefix, fwe, ".rds"))
     if (!file.exists(save_to)) {
       cat("Calculation started at", as.character(now()), "\n")
       cat("(", i, "/", nof, ") ", basename(save_to), "\n", sep = "")
