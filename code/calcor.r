@@ -25,6 +25,7 @@ calcor <- function(files = stop("'file' must be specified"), log = T) {
       w <- readRDS(f)
       st <- system.time(data <- cor2(w, pm, alfa = seq(0, 360, 1)))[3]
       cat("[Elapsed :", st, "sec]\n")
+      attr(data, "filename") <- f
       saveRDS(data, file = save_to)
     } else {
       cat("(", i, "/", nof, ") ", save_to, " is exist.\n", sep = "")
@@ -49,4 +50,5 @@ files <- paste0(c("r2-pres-00-uv", "r2-pres-06-uv",
                   "r2-pres-12-omega", "r2-pres-18-omega",
                   "r2-pres-daily-omega"), ".rds")
 files <- file.path("data/rds", files)
-calcor(files)
+calcor(files, log = T)
+calcor(files, log = F)

@@ -101,7 +101,7 @@ nc2rds_all <- function() {
     for (i in 1:4) {
       data <- extract_time(x, from = i)
       save_to <- file.path(dir_out, gsub("-4-", paste0("-", tm[i], "-"), f))
-      attr(data, 'filename') <- save_to
+      attr(data, 'filename') <- attr(x, 'filename')
       saveRDS(data, save_to)
     }
   }
