@@ -19,8 +19,8 @@ load_countries <- function() {
 }
 cntry <- load_countries()
 
-
 plot_cor_map <- function(x, main = "", panel.title.format = "") {
+  library(latticeExtra)
   library(raster)
   library(rasterVis)
   library(timeSeries)
@@ -33,10 +33,10 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
     return(sapply(1:nl, function(l) pts[idx[l], l]))
   }
 
-  xn <- x
+  xn <- rsezen::ibicubic(x, dx = 0.05)
   dn  <- dimnames(xn)
   dnm <- names(dn)
-  l <- list(); i <- 4
+  l <- list(); i <- 3
   while (i <= length(dim(xn))) {
     if ( dim(xn)[i] == 1 ) {
       lv <- list(dn[[dnm[i]]][1])
@@ -59,8 +59,8 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
   # print(sub)
   if (length(dim(xn)) == 2) {
     xn <- array(xn, dim = c( dim(xn), 1))
-    names(dim(xn)) <- dnm
-    dimnames(xn) <- dn
+    names(dim(xn)) <- dnm[1:3]
+    dimnames(xn) <- dn[1:3]
   }
   xn <- aperm(xn, c(2,1,3))
   if (!is.character(panel.title.format) || panel.title.format == "")
@@ -76,7 +76,7 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
   pts_mx <- get_pts(stck, colMaxs)
   pts_mn <- get_pts(stck, colMins)
   levelplot(stck, par.settings = BuRdTheme, names.attr = panel.title, margin = list(NULL),
-            xlab = 'Longitude', ylab = 'Latitude', main = main, sub = sub, interpolate = T) +
+            xlab = 'Longitude', ylab = 'Latitude', main = main, sub = list(label = sub, cex = 0.7)) +
     latticeExtra::layer(sp.polygons(cntry, fill = 'transparent', col = "gray50", alpha = 0.9), under = F) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 3, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 1, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
@@ -108,7 +108,8 @@ plot_vector_field <- function(u, v, ...) {
 
 plot_cor_for <- function(pattern = "hgt") {
   dir_data_cor <- "data/cor"
-  files <- list.files(dir_data_cor, full.names = T, pattern = pattern)
+  files <- list.files(dir_data_cor, full.names = T)
+  for (p in pattern) files <- Filter(function(x) grepl(p, x), files)
   for (f in files) {
     bf <- basename(f)
     if (tools::file_ext(bf) == "rds") {
@@ -138,6 +139,97 @@ plot_cor_for <- function(pattern = "hgt") {
       pdf(paste0(bf, ".pdf"), width = 16, height = 8)
       print(plot_cor_map(x, main = cap, panel.title.format = panel.title.format))
       dev.off()
+    }
+  }
+}
+
+plot_reg <- function(pattern = NULL, save = T) {
+  dir_data_cor <- "data/cor"
+  files <- list.files(dir_data_cor, full.names = T)
+  for (p in pattern) files <- Filter(function(x) grepl(p, x), files)
+  pm <- read_pm10()
+  for (f in files) {
+    bf <- basename(f)
+    if (tools::file_ext(bf) == "rds") {
+      tryCatch({
+        xc <- readRDS(f)
+        longname <- attr(xc, "longname")
+        varname <- attr(xc, "name")
+        if (is.null(longname)) longname <- bf
+        df <- corstat(xc)
+        imx <- which(df[,1] == max(df[,1]), arr.ind = T)[1]
+        df <- df[imx,]
+        x <- readRDS(attr(xc, "filename"))
+        sub <- paste0("lon = ", df$vlon[1], ", lat = ", df$vlat[1])
+        if (grepl("uv", bf)) {
+          sub <- paste0(sub, ", alfa = ", df$valfa[1])
+          x <- rwind::rotax(x, alfa = as.numeric(as.character(df$valfa[1])))
+          if (grepl("pres", bf)) {
+            xlab <- paste0(df$vcomponent[1], "-", longname)
+            xlab <- gsub("Pressure Levels", paste0(df$vlevel, " hPa"), xlab)
+            x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],,df$icomponent[1]]
+            xc <- xc[,, df$ipm[1], df$icomponent[1], df$ialfa[1], df$ilevel[1], drop = F]
+          } else if (grepl("surf", bf)) {
+            if (grepl("6-Hourly Forecast of ", longname)) {
+              xlab <- gsub("6-Hourly Forecast of ", paste0(df$vcomponent[1], "-"), longname)
+            } else {
+              xlab <- gsub("Daily Forecast of ", paste0(df$vcomponent[1], "-"), longname)
+            }
+            x <- x[df$ilon[1], df$ilat[1],,df$icomponent[1]]
+            xc <- xc[,, df$ipm[1], df$icomponent[1], df$ialfa[1], drop = F]
+          }
+        } else if (grepl("hgt", bf)) {
+          xlab <- gsub("Pressure Levels", paste0(df$vlevel, " hPa"), longname)
+          x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],]
+          xc <- xc[,,, df$ilevel[1], drop = T]
+          xc <- xc[,,df$ipm[1], drop = F]
+        } else if (grepl("mslp", bf)) {
+          x <- x[df$ilon[1], df$ilat[1],] / 100
+          xc <- xc[,, df$ipm[1], drop = F]
+          xlab <- paste0(longname, " (hPa)")
+        } else if (grepl("omega", bf)) {
+          xlab <- paste0(longname, " (", attr(x, "unit"), ")")
+          x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],]
+          xc <- xc[,,, df$ilevel[1], drop = T]
+          xc <- xc[,,df$ipm[1], drop = F]
+        }
+        p <- as.vector(pm[,df$ipm[1]])
+        ylab <- as.character(df$vpm[1])
+        clr <- "cornflowerblue"
+        if  (grepl("log", bf)) {
+          p <- log(p)
+          ylab <- paste0("log(", ylab, ")")
+          clr <- "pink"
+        }
+        reg <- lm(p ~ x)
+        cr <- cor(p, x, use = "pairwise.complete.obs")
+        sr <- summary(reg)
+
+        if (save) pdf(paste0("reg_", bf, ".pdf"), width = 12, height = 15)
+        def.par <- par(no.readonly = TRUE)
+        layout(matrix(c(1,2,3,4,5,6), 3, 2, byrow = TRUE))
+        plot(0, xaxt = 'n', yaxt = 'n', bty = 'n', pch = '', ylab = '', xlab = '')
+        plot(reg$model[,2:1], pch = 21, bg = clr, las = 1,
+             ylab = ylab, xlab = xlab, sub = sub)
+        abline(reg, col = "red")
+        cf <- round(coef(reg), 5)
+        comp_name <- as.character(if (is.null(df$vcomponent[1])) varname else df$vcomponent[1])
+        eq <- paste0("pm = ", cf[1],
+                     ifelse(sign(cf[2]) == 1, " + ", " - "), abs(cf[2]), " ", comp_name)
+        adj.rs <- round(sr$adj.r.squared, 4)
+        cr <- round(cr, 3)
+        legend("topleft",
+               c(eq, paste0("Adj. R^2 = ", adj.rs), paste0("cor = ", cr)),
+               bty = "n", col = 1:3, pch = 16, text.col = 1:3, y.intersp = 2)
+        plot(reg, ask = F, pch = 21, bg = "chartreuse3")
+        print(plot_cor_map(xc, main = "", panel.title.format = ""), split = c(1, 1, 2, 3), newpage = F)
+        par(def.par)
+        if (save) dev.off()
+      }, error = function(e) {
+        cat(bf, "cannot be read.\n")
+      }, finally = {
+        next
+      })
     }
   }
 }
