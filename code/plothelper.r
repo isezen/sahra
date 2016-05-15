@@ -75,9 +75,9 @@ plot_cor_map <- function(x, main = "", panel.title.format = "") {
                       ymn = min(lat), ymx =  max(lat)))
   pts_mx <- get_pts(stck, colMaxs)
   pts_mn <- get_pts(stck, colMins)
-  levelplot(stck, par.settings = BuRdTheme, names.attr = panel.title, margin = list(NULL),
+  levelplot(stck, par.settings = BuRdTheme, names.attr = panel.title, margin = list(NULL), contour = T,
             xlab = 'Longitude', ylab = 'Latitude', main = main, sub = list(label = sub, cex = 0.7)) +
-    latticeExtra::layer(sp.polygons(cntry, fill = 'transparent', col = "gray50", alpha = 0.9), under = F) +
+    latticeExtra::layer(sp.polygons(cntry, fill = 'transparent', col = "bisque4", alpha = 0.9), under = F) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 3, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
     latticeExtra::layer(sp.points(pts_mx[[panel.number()]], pch = 1, cex = 2, lwd = 2, col = "black"), data = list(pts_mx = pts_mx)) +
     latticeExtra::layer(sp.points(pts_mn[[panel.number()]], pch = 3, cex = 2, lwd = 2, col = "black"), data = list(pts_mn = pts_mn)) +
@@ -226,7 +226,8 @@ plot_reg <- function(pattern = NULL, save = T) {
         par(def.par)
         if (save) dev.off()
       }, error = function(e) {
-        cat(bf, "cannot be read.\n")
+        print(e)
+        # cat(bf, "cannot be read.\n")
       }, finally = {
         next
       })
