@@ -9,7 +9,7 @@ calcor <- function(files = stop("'file' must be specified"), log = T) {
   pm <- read_pm10()
   file_prefix <- "pm_"
   if (log) {
-    pm <- log(pm)
+    pm <- log10(pm)
     file_prefix <- paste0("log_", file_prefix)
   }
   dir_out <- "data/cor"

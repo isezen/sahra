@@ -2,6 +2,9 @@
 # 2016-05-04 Ismail SEZEN
 # sezenismail@gmail.com
 
+source("code/correlation.r")
+source("code/filehelper.r")
+
 load_countries <- function() {
   # download map
   dir_countries <- "countries_shp"
@@ -197,7 +200,7 @@ plot_reg <- function(pattern = NULL, save = T) {
         ylab <- as.character(df$vpm[1])
         clr <- "cornflowerblue"
         if  (grepl("log", bf)) {
-          p <- log(p)
+          p <- log10(p)
           ylab <- paste0("log(", ylab, ")")
           clr <- "pink"
         }
