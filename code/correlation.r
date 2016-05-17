@@ -2,6 +2,8 @@
 # 2016-05-04 Ismail SEZEN
 # sezenismail@gmail.com
 
+source("code/filehelper.r")
+
 corstat <- function(x, dim = NULL) {
   csb <- function(x, func = max) {
     dn <- dimnames(x)
@@ -61,6 +63,69 @@ corstat_from_files <- function(pattern = NULL) {
       })
     }
   }
+}
+
+get_data_by_cor <- function(fun=max) {
+  dir_data_cor <- "data/cor"
+  files <- list.files(dir_data_cor, full.names = T)
+  files <- Filter(function(x) grepl("daily", x), files)
+  ret <- NULL
+  for (f in files) {
+    bf <- basename(f)
+    if (tools::file_ext(bf) == "rds") {
+      tryCatch({
+        xc <- readRDS(f)
+        longname <- attr(xc, "longname")
+        varname <- attr(xc, "name")
+        if (is.null(longname)) longname <- bf
+        if (grepl("log", bf)) longname <- paste0(longname, " (log)")
+        cat(longname, ":\n")
+        df <- corstat(xc)
+        imx <- which(df[,1] == fun(df[,1]), arr.ind = T)[1]
+        df <- df[imx,]
+        x <- readRDS(attr(xc, "filename"))
+        if (grepl("uv", bf)) {
+          x <- rwind::rotax(x, alfa = as.numeric(as.character(df$valfa[1])))
+          if (grepl("pres", bf)) {
+            x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],,df$icomponent[1]]
+          } else if (grepl("surf", bf)) {
+            x <- x[df$ilon[1], df$ilat[1],,df$icomponent[1]]
+          }
+        } else if (grepl("hgt", bf)) {
+          x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],]
+        } else if (grepl("mslp", bf)) {
+          x <- x[df$ilon[1], df$ilat[1],] / 100
+        } else if (grepl("omega", bf)) {
+          x <- x[df$ilon[1], df$ilat[1], df$ilevel[1],]
+        }
+        cname <- if  (grepl("log", bf)) paste0("log_", varname) else varname
+        if (grepl("uv", bf)) {
+          if (grepl("surf", bf)) {
+            cname <- paste0(cname, "_surf")
+          }
+        }
+        if (is.null(ret)) {
+          ret = matrix(x, ncol = 1)
+          colnames(ret)[1] <- cname
+          rownames(ret) <- names(x)
+        } else {
+          ret <- cbind(ret, x)
+          colnames(ret)[ncol(ret)] <-  cname
+        }
+
+      }, error = function(e) {
+        print(e)
+      }, finally = {
+        next
+      })
+    }
+  }
+  return(ret)
+}
+
+save_data_by_cor <- function(fun = max, file = "out.csv") {
+  data <- get_data_by_cor(fun)
+  save_csv(data, file)
 }
 
 cor2 <- function(x, pm, alfa = seq(0, 360, 20), par = T) {
